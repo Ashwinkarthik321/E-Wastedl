@@ -1,5 +1,6 @@
 import streamlit as st
 from tensorflow.keras.models import load_model
+import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 import numpy as np
 import json
@@ -12,7 +13,14 @@ import plotly.express as px
 MODEL_PATH = "models/ewaste_classifier.keras"
 CLASS_INDEX_PATH = "models/class_indices.json"
 
-model = load_model(MODEL_PATH)
+# Try loading the packaged Keras file first; fall back to the SavedModel directory if that fails.
+try:
+    model = load_model(MODEL_PATH)
+except Exception:
+    try:
+        model = tf.keras.models.load_model("models/ewaste_classifier_savedmodel", compile=False)
+    except Exception as e:
+        raise RuntimeError(f"Failed to load model from {MODEL_PATH} and fallback SavedModel: {e}")
 
 with open(CLASS_INDEX_PATH) as f:
     class_indices = json.load(f)

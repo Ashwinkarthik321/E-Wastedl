@@ -13,6 +13,16 @@ img_size = (224,224)
 batch_size = 32
 num_epochs = 8
 
+# build explicit list of class subdirectories (ignore files like .DS_Store)
+def _list_class_dirs(root):
+    return sorted([
+        d for d in os.listdir(root)
+        if os.path.isdir(os.path.join(root, d)) and not d.startswith('.')
+    ])
+
+class_dirs = _list_class_dirs(train_dir)
+print(f"Detected class folders: {class_dirs}")
+
 train_datagen = ImageDataGenerator(
     rescale=1./255,
     validation_split=0.1
@@ -33,6 +43,32 @@ val_gen = train_datagen.flow_from_directory(
     class_mode='categorical',
     subset='validation'
 )
+
+# If generators detected differing number of classes, remake them using explicit `classes` list
+if train_gen.num_classes != val_gen.num_classes:
+    print(f"Warning: train classes={train_gen.num_classes}, val classes={val_gen.num_classes}. Recreating generators with explicit class list.")
+    seed = 123
+    train_gen = train_datagen.flow_from_directory(
+        train_dir,
+        target_size=img_size,
+        batch_size=batch_size,
+        class_mode='categorical',
+        subset='training',
+        classes=class_dirs,
+        seed=seed
+    )
+
+    val_gen = train_datagen.flow_from_directory(
+        train_dir,
+        target_size=img_size,
+        batch_size=batch_size,
+        class_mode='categorical',
+        subset='validation',
+        classes=class_dirs,
+        seed=seed
+    )
+
+assert train_gen.num_classes == val_gen.num_classes, "Train and validation generators must have same number of classes"
 
 
 # base model
@@ -59,7 +95,11 @@ model.compile(optimizer=Adam(1e-5), loss='categorical_crossentropy', metrics=['a
 history_ft = model.fit(train_gen, validation_data=val_gen, epochs=5)
 
 # save
+os.makedirs('models', exist_ok=True)
+# Save in Keras v3 single-file format
 model.save('models/ewaste_classifier.keras')
+# Also save the TensorFlow SavedModel directory (more portable across TF/Keras versions)
+model.save('models/ewaste_classifier_savedmodel', save_format='tf')
 
 # save class indices mapping
 import json
