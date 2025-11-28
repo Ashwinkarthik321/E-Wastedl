@@ -10,7 +10,7 @@ import plotly.express as px
 # -----------------------------
 # Load Model & Classes
 # -----------------------------
-MODEL_PATH = "models/ewaste_classifier.keras"
+MODEL_PATH = "ewaste_classifier.keras"
 CLASS_INDEX_PATH = "models/class_indices.json"
 
 # Try loading the packaged Keras file first; fall back to the SavedModel directory if that fails.
