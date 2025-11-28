@@ -5,7 +5,7 @@ import json
 import pandas as pd
 
 # Load model
-model = load_model('models/ewaste_classifier.h5')
+model = load_model('models/ewaste_classifier.keras')
 
 # Load class mappings
 with open('models/class_indices.json') as f:
