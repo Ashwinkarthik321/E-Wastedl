@@ -59,7 +59,7 @@ model.compile(optimizer=Adam(1e-5), loss='categorical_crossentropy', metrics=['a
 history_ft = model.fit(train_gen, validation_data=val_gen, epochs=5)
 
 # save
-model.save('models/ewaste_classifier.h5')
+model.save('models/ewaste_classifier.keras')
 
 # save class indices mapping
 import json

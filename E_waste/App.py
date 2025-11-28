@@ -9,7 +9,7 @@ import plotly.express as px
 # -----------------------------
 # Load Model & Classes
 # -----------------------------
-MODEL_PATH = "models/ewaste_classifier.h5"
+MODEL_PATH = "models/ewaste_classifier.keras"
 CLASS_INDEX_PATH = "models/class_indices.json"
 
 model = load_model(MODEL_PATH)
