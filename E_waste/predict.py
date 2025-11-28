@@ -5,7 +5,13 @@ import json
 import pandas as pd
 
 # Load model
-model = load_model('models/ewaste_classifier.keras')
+try:
+    model = load_model('models/ewaste_classifier.keras')
+except Exception as e:
+    st.error("❌ Model file is corrupted or incompatible.")
+    st.exception(e)
+    st.stop()
+
 
 # Load class mappings
 with open('models/class_indices.json') as f:
