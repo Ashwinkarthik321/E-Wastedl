@@ -6,21 +6,38 @@ import numpy as np
 import json
 from PIL import Image
 import plotly.express as px
+from pathlib import Path
 
 # -----------------------------
 # Load Model & Classes
 # -----------------------------
-MODEL_PATH = "ewaste_classifier.keras"
-CLASS_INDEX_PATH = "models/class_indices.json"
+BASE_DIR = Path(__file__).resolve().parent
+
+# Paths relative to this script (more robust when Streamlit changes cwd)
+MODEL_PATH = BASE_DIR.parent / "models" / "ewaste_classifier.keras"
+SAVEDMODEL_PATH = BASE_DIR.parent / "models" / "ewaste_classifier_savedmodel"
+CLASS_INDEX_PATH = BASE_DIR.parent / "models" / "class_indices.json"
 
 # Try loading the packaged Keras file first; fall back to the SavedModel directory if that fails.
-try:
-    model = load_model(MODEL_PATH)
-except Exception:
+load_error = None
+if MODEL_PATH.exists():
     try:
-        model = tf.keras.models.load_model("models/ewaste_classifier_savedmodel", compile=False)
+        model = load_model(str(MODEL_PATH))
     except Exception as e:
-        raise RuntimeError(f"Failed to load model from {MODEL_PATH} and fallback SavedModel: {e}")
+        load_error = e
+else:
+    load_error = FileNotFoundError(f"Keras model not found at {MODEL_PATH}")
+
+if (('model' not in locals()) or model is None) and SAVEDMODEL_PATH.exists():
+    try:
+        model = tf.keras.models.load_model(str(SAVEDMODEL_PATH), compile=False)
+    except Exception as e:
+        load_error = e
+
+if 'model' not in locals() or model is None:
+    # Provide a helpful error listing the checked paths
+    paths_checked = [str(MODEL_PATH), str(SAVEDMODEL_PATH)]
+    raise RuntimeError(f"Failed to load model. Checked paths: {paths_checked}. Last error: {load_error}")
 
 with open(CLASS_INDEX_PATH) as f:
     class_indices = json.load(f)
@@ -132,7 +149,8 @@ with tab1:
     st.markdown('<div class="title">E-Waste Category & Scrap Price Predictor</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">AI-powered tool to classify e-waste & estimate scrap price instantly</div>', unsafe_allow_html=True)
 
-    st.image("https://images.unsplash.com/photo-1581091012184-5c6a83090536", use_container_width=True, caption="Electronic Waste Recycling")
+    st.image("E_waste/banner.jpg", use_container_width=True, caption="Electronic Waste Recycling")
+    
 
 
 # -----------------------------

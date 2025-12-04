@@ -41,7 +41,7 @@ model.compile(optimizer=Adam(1e-5), loss='categorical_crossentropy', metrics=['a
 model.fit(train, validation_data=val, epochs=5)
 
 os.makedirs("models", exist_ok=True)
-model.save("models/ewaste_classifier.keras")
+model.save("/workspaces/E-Wastedl/models/ewaste_classifier.keras")
 
 with open("models/class_indices.json", "w") as f:
     json.dump(train.class_indices, f)

@@ -2,19 +2,29 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import json
-import pandas as pd
+import sys
+from pathlib import Path
+
+# Resolve paths relative to this script (avoids cwd issues)
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR.parent / "models" / "ewaste_classifier.keras"
+SAVEDMODEL_PATH = BASE_DIR.parent / "models" / "ewaste_classifier_savedmodel"
+CLASS_INDEX_PATH = BASE_DIR.parent / "models" / "class_indices.json"
 
 # Load model
-try:
-    model = load_model('models/ewaste_classifier.keras')
-except Exception as e:
-    st.error("❌ Model file is corrupted or incompatible.")
-    st.exception(e)
-    st.stop()
+if not MODEL_PATH.exists():
+    print(f"Model not found at {MODEL_PATH}")
+    sys.exit(1)
+
+model = load_model(str(MODEL_PATH))
 
 
 # Load class mappings
-with open('models/class_indices.json') as f:
+if not CLASS_INDEX_PATH.exists():
+    print(f"Class index file not found at {CLASS_INDEX_PATH}")
+    sys.exit(1)
+
+with open(CLASS_INDEX_PATH) as f:
     class_indices = json.load(f)
 
 idx_to_class = {v: k for k, v in class_indices.items()}
@@ -35,7 +45,7 @@ scrap_prices = {
 
 
 def predict_image(img_path):
-    img = image.load_img(img_path, target_size=(224,224))
+    img = image.load_img(str(img_path), target_size=(224, 224))
     arr = image.img_to_array(img)/255.0
     arr = np.expand_dims(arr, 0)
 
@@ -49,9 +59,13 @@ def predict_image(img_path):
     return label, confidence, price
 
 # Test
-# print(predict_image(" /Microwave_67.jpg"))
 if __name__ == "__main__":
-    label, confidence, price = predict_image("/workspaces/springboot1/E_waste/Microwave_67.jpg")
+    test_img = BASE_DIR / "Microwave_67.jpg"
+    if not test_img.exists():
+        print(f"Test image not found at {test_img}")
+        sys.exit(1)
+
+    label, confidence, price = predict_image(test_img)
     print("Predicted Category:", label)
     print("Confidence:", confidence)
     print("Scrap Price:", price)
